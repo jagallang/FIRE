@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>좌표 변환 테스트</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+</head>
+<body>
+  <h1>좌표 변환 테스트</h1>
+  <div id="results"></div>
+
+  <script>
+    // 테스트 데이터
+    const testData = [
+      { name: '함안군 칠북면', x: 14283828, y: 4212156.091, expected: '35.27°N, 128.41°E' },
+      { name: '서울 관악구', x: 14133264.3, y: 4503340.19, expected: '37.48°N, 126.95°E' },
+      { name: '영천시 도림동', x: 14352838, y: 4302707.927, expected: '36.06°N, 128.93°E' },
+    ];
+
+    // 다양한 좌표계 정의
+    proj4.defs([
+      ['EPSG:5179-CM', '+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=10000000 +y_0=20000000 +ellps=GRS80 +units=cm +no_defs'],
+      ['EPSG:5179', '+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +units=m +no_defs'],
+      ['EPSG:5186', '+proj=tmerc +lat_0=38 +lon_0=127 +k=1 +x_0=200000 +y_0=600000 +ellps=GRS80 +units=m +no_defs'],
+      ['CUSTOM:KFS1', '+proj=tmerc +lat_0=38 +lon_0=127.5 +k=1 +x_0=14000000 +y_0=4000000 +ellps=GRS80 +units=m +no_defs'],
+      ['CUSTOM:KFS2', '+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=14000000 +y_0=4000000 +ellps=GRS80 +units=m +no_defs'],
+    ]);
+
+    const results = document.getElementById('results');
+
+    testData.forEach(data => {
+      results.innerHTML += `<h2>${data.name} (예상: ${data.expected})</h2>`;
+      results.innerHTML += `<p>원본: X=${data.x}, Y=${data.y}</p>`;
+
+      const projections = [
+        'EPSG:5179-CM',
+        'EPSG:5179',
+        'EPSG:5186',
+        'CUSTOM:KFS1',
+        'CUSTOM:KFS2'
+      ];
+
+      projections.forEach(proj => {
+        try {
+          const result = proj4(proj, 'EPSG:4326', [data.x, data.y]);
+          const [lng, lat] = result;
+          const valid = lat >= 33 && lat <= 43 && lng >= 124 && lng <= 132;
+          results.innerHTML += `<p style="color: ${valid ? 'green' : 'red'}">
+            ${proj}: ${lat.toFixed(6)}°N, ${lng.toFixed(6)}°E ${valid ? '✓' : '✗'}
+          </p>`;
+        } catch (error) {
+          results.innerHTML += `<p style="color: gray">${proj}: Error - ${error.message}</p>`;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

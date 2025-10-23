@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>산림청 API 연도별 데이터 확인</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .result { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+    .success { background: #d4edda; }
+    .empty { background: #fff3cd; }
+    .error { background: #f8d7da; }
+  </style>
+</head>
+<body>
+  <h1>산림청 API 연도별 데이터 확인</h1>
+  <button onclick="checkYears()">연도별 데이터 확인 시작</button>
+  <div id="results"></div>
+
+  <script>
+    const API_KEY = 'Q06IMS46-Q06I-Q06I-Q06I-Q06IMS46VN';
+
+    async function checkYear(year) {
+      const url = `/api/wildfire/getFrfireSttusData.do?serviceKey=${API_KEY}&pageNo=1&numOfRows=10&occuYear=${year}`;
+
+      try {
+        const response = await fetch(url);
+        const text = await response.text();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, 'text/xml');
+
+        const items = xml.querySelectorAll('item');
+        return {
+          year,
+          count: items.length,
+          success: true,
+          sample: items.length > 0 ? items[0].querySelector('OCCU_DATE')?.textContent : null
+        };
+      } catch (error) {
+        return {
+          year,
+          count: 0,
+          success: false,
+          error: error.message
+        };
+      }
+    }
+
+    async function checkYears() {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<p>데이터 확인 중...</p>';
+
+      const results = [];
+      const currentYear = new Date().getFullYear();
+
+      // 2010년부터 현재까지 확인
+      for (let year = currentYear; year >= 2010; year--) {
+        const result = await checkYear(year);
+        results.push(result);
+
+        const className = result.count > 0 ? 'success' : 'empty';
+        const html = `
+          <div class="result ${className}">
+            <strong>${result.year}년:</strong>
+            ${result.count > 0 ? `${result.count}건 발견` : '데이터 없음'}
+            ${result.sample ? ` (샘플: ${result.sample})` : ''}
+          </div>
+        `;
+        resultsDiv.innerHTML += html;
+
+        // API 속도 제한 방지
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      // 요약
+      const yearsWithData = results.filter(r => r.count > 0);
+      const summary = `
+        <div class="result success">
+          <h3>요약</h3>
+          <p>데이터가 있는 연도: ${yearsWithData.map(r => r.year).join(', ')}</p>
+          <p>총 ${yearsWithData.length}개 연도</p>
+        </div>
+      `;
+      resultsDiv.innerHTML += summary;
+    }
+  </script>
+</body>
+</html>
