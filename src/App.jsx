@@ -62,7 +62,7 @@ function App() {
                 FIRE
               </div>
             </div>
-            <div className="flex gap-8">
+            <div className="flex gap-8 items-center">
               {[
                 { id: 'map', label: '산불지도' },
                 { id: 'case', label: '사례' },
@@ -88,6 +88,13 @@ function App() {
                   )}
                 </button>
               ))}
+              <a
+                href="/ir-dashboard.html"
+                target="_blank"
+                className="ml-4 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-sm font-semibold rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-purple-500/50"
+              >
+                📊 IR 대시보드
+              </a>
             </div>
           </div>
         </div>
